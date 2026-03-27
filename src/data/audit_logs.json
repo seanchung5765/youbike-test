@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "time": "2026-03-27T09:15:23.000Z",
+    "user": "王小明",
+    "username": "A12345",
+    "role": "ADMIN",
+    "action": "查詢報表",
+    "region": "台北",
+    "keyword": "成長趨勢"
+  },
+  {
+    "id": 2,
+    "time": "2026-03-27T09:20:10.000Z",
+    "user": "李小華",
+    "username": "B56789",
+    "role": "REGIONAL_MGR",
+    "action": "查詢報表",
+    "region": "桃園",
+    "keyword": "用戶數"
+  },
+  {
+    "id": 3,
+    "time": "2026-03-27T09:32:45.000Z",
+    "user": "陳大同",
+    "username": "C99887",
+    "role": "VIEWER",
+    "action": "查看報表",
+    "region": "新竹",
+    "keyword": ""
+  },
+  {
+    "id": 4,
+    "time": "2026-03-27T10:05:12.000Z",
+    "user": "王小明",
+    "username": "A12345",
+    "role": "ADMIN",
+    "action": "修改權限映射",
+    "region": "",
+    "keyword": "LDAP GROUP"
+  },
+  {
+    "id": 5,
+    "time": "2026-03-27T10:30:55.000Z",
+    "user": "林志強",
+    "username": "D33445",
+    "role": "REGIONAL_MGR",
+    "action": "查詢報表",
+    "region": "高雄",
+    "keyword": "異常率"
+  }
+]

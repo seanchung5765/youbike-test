@@ -1,0 +1,25 @@
+{
+  "roleMappings": [
+    {
+      "ldap_group_dn": "CN=Your_Admin_Group,OU=Groups,DC=example,DC=com",
+      "role_id": "ADMIN"
+    }
+  ],
+  "unitConfigs": [
+    {
+      "unit_name": "北營運處",
+      "keyword": "North",
+      "regions": ["台北", "桃園", "新竹", "苗栗"]
+    },
+    {
+      "unit_name": "中營運處",
+      "keyword": "Central",
+      "regions": ["台中", "嘉義"]
+    },
+    {
+      "unit_name": "南營運處",
+      "keyword": "South",
+      "regions": ["台南", "高雄", "屏東", "台東"]
+    }
+  ]
+}

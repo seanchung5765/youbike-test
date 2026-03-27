@@ -1,0 +1,44 @@
+{
+  "roleMappings": [
+    {
+      "ldap_group_dn": "CN=YB_Admin,OU=Groups,DC=youbike,DC=com",
+      "role_id": "ADMIN"
+    },
+    {
+      "ldap_group_dn": "CN=YB_Regional_Manager,OU=Groups,DC=youbike,DC=com",
+      "role_id": "REGIONAL_MGR"
+    },
+    {
+      "ldap_group_dn": "CN=YB_Viewer,OU=Groups,DC=youbike,DC=com",
+      "role_id": "VIEWER"
+    }
+  ],
+
+  "unitConfigs": [
+    {
+      "unit_name": "北營處",
+      "keyword": "北營",
+      "regions": ["台北", "新北"]
+    },
+    {
+      "unit_name": "桃竹苗營處",
+      "keyword": "桃竹苗",
+      "regions": ["桃園", "新竹", "苗栗"]
+    },
+    {
+      "unit_name": "中營處",
+      "keyword": "中營",
+      "regions": ["台中"]
+    },
+    {
+      "unit_name": "南營處",
+      "keyword": "南營",
+      "regions": ["台南", "高雄"]
+    },
+    {
+      "unit_name": "東營處",
+      "keyword": "東營",
+      "regions": ["花蓮", "台東"]
+    }
+  ]
+}

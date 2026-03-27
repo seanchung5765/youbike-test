@@ -1,0 +1,30 @@
+<select id="region-filter" class="border p-2 rounded">
+  <option value="台北">台北市</option>
+  <option value="桃園">桃園市</option>
+  <option value="新竹">新竹市</option>
+  <option value="苗栗">苗栗縣</option>
+  <option value="台中">台中市</option>
+  <option value="高雄">高雄市</option>
+</select>
+
+<script>
+  window.onload = function() {
+    // 從父視窗 (search.html) 取得使用者資訊
+    const user = window.parent.currentUser;
+    if (!user) return;
+
+    const select = document.getElementById("region-filter");
+    
+    // 如果不是管理員 (ADMIN)，則執行過濾
+    if (user.role !== 'ADMIN') {
+      const allowedRegions = user.scope || []; // 例如 ["台北", "桃園"]
+      
+      Array.from(select.options).forEach(option => {
+        // 如果該選項不在允許的轄區內，就移除它
+        if (!allowedRegions.includes(option.value)) {
+          option.remove();
+        }
+      });
+    }
+  };
+</script>

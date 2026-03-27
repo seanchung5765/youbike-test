@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>查詢紀錄</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-slate-100 min-h-screen p-6">
+
+  <div class="max-w-6xl mx-auto">
+
+    <h1 class="text-2xl font-bold mb-6">📜 系統查詢紀錄</h1>
+
+    <!-- 篩選 -->
+    <div class="bg-white p-4 rounded-xl shadow mb-4 flex gap-4 flex-wrap">
+      
+      <input id="keyword"
+        placeholder="搜尋使用者 / 地區"
+        class="border px-3 py-2 rounded w-60" />
+
+      <button onclick="loadLogs()"
+        class="bg-slate-900 text-white px-4 py-2 rounded">
+        查詢
+      </button>
+
+    </div>
+
+    <!-- 表格 -->
+    <div class="bg-white rounded-xl shadow overflow-auto">
+      <table class="w-full text-sm text-left">
+        <thead class="bg-slate-100">
+          <tr>
+            <th class="p-2">時間</th>
+            <th class="p-2">使用者</th>
+            <th class="p-2">角色</th>
+            <th class="p-2">操作</th>
+            <th class="p-2">地區</th>
+            <th class="p-2">關鍵字</th>
+          </tr>
+        </thead>
+        <tbody id="logTable"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script>
+    let allLogs = [];
+
+    async function init() {
+      try {
+        const res = await fetch("/api/admin/logs", {
+          credentials: "include"
+        });
+
+        if (!res.ok) {
+          alert("無權限或未登入");
+          window.parent.location.href = "/";
+          return;
+        }
+
+        const data = await res.json();
+        allLogs = data.logs || [];
+
+        renderTable(allLogs);
+
+      } catch (err) {
+        console.error(err);
+        alert("讀取失敗");
+      }
+    }
+
+    function loadLogs() {
+      const keyword = document.getElementById("keyword").value.trim();
+
+      if (!keyword) {
+        renderTable(allLogs);
+        return;
+      }
+
+      const filtered = allLogs.filter(log =>
+        (log.user || "").includes(keyword) ||
+        (log.region || "").includes(keyword)
+      );
+
+      renderTable(filtered);
+    }
+
+    function renderTable(logs) {
+      const tbody = document.getElementById("logTable");
+      tbody.innerHTML = "";
+
+      if (!logs.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center p-4 text-slate-400">
+              無紀錄
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      logs.forEach(log => {
+        const tr = document.createElement("tr");
+        tr.className = "border-t";
+
+        tr.innerHTML = `
+          <td class="p-2">${formatTime(log.time)}</td>
+          <td class="p-2">${log.user || "-"}</td>
+          <td class="p-2">${log.role || "-"}</td>
+          <td class="p-2">${log.action || "-"}</td>
+          <td class="p-2">${log.region || "-"}</td>
+          <td class="p-2">${log.keyword || "-"}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function formatTime(ts) {
+      if (!ts) return "-";
+      const d = new Date(ts);
+      return d.toLocaleString();
+    }
+
+    init();
+  </script>
+
+</body>
+</html>
