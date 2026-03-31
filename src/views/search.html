@@ -32,7 +32,6 @@
   class="bg-slate-50 flex flex-col h-screen overflow-hidden"
   x-data="{ sidebarOpen: false, userMenuOpen: false }"
   @close-sidebar.window="sidebarOpen = false"
-  x-init="init()"
 >
 
   <!-- Header -->
@@ -84,15 +83,9 @@
         x-cloak
         class="absolute right-0 mt-2 w-48 bg-white border rounded shadow-xl py-1 z-50 text-slate-800 ring-1 ring-black ring-opacity-5"
       >
-        <a href="#" class="block px-4 py-2 text-sm hover:bg-orange-50 hover:text-orange-600 transition">
-          個人設定
-        </a>
-
-        <hr class="my-1 border-slate-100" />
-
         <button
           onclick="logout()"
-          class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+          class="w-full text-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
         >
           登出系統
         </button>
@@ -114,10 +107,10 @@
 
     <!-- Sidebar -->
     <aside
-      class="absolute left-0 top-0 h-full w-72 bg-slate-900 text-slate-300 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out"
+      class="absolute left-0 top-0 h-full w-72 bg-slate-900 text-slate-300 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out overflow-y-auto"
       :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
     >
-      <div class="p-6 flex justify-between items-center border-b border-slate-800 bg-slate-950">
+      <div class="p-6 flex justify-between items-center border-b border-slate-800 bg-slate-950 sticky top-0 z-10">
         <div class="flex items-center space-x-2">
           <div class="w-2 h-6 bg-orange-600 rounded-full"></div>
           <span class="text-white font-black text-xl tracking-tight">MENU</span>
@@ -128,34 +121,95 @@
         </button>
       </div>
 
-      <nav class="p-4 space-y-1">
-        <p class="text-[10px] text-slate-500 uppercase font-bold px-3 mt-6 mb-2 tracking-widest">
+      <nav class="p-4 space-y-1 pb-10" x-data="{ openGroups: [] }">
+        
+        <p class="text-[10px] text-slate-500 uppercase font-bold px-3 mt-4 mb-2 tracking-widest">
           業務分析報表
         </p>
-
-        <a href="javascript:void(0)" onclick="loadReport(this, '/report/SalesAnalytics')" class="report-link block px-4 py-3 rounded-lg hover:bg-slate-800">
+        <a href="javascript:void(0)" onclick="loadReport(this, '/report/salesanalytics')" class="report-link block px-4 py-3 rounded-lg hover:bg-slate-800 transition">
           銷售統計報表
         </a>
-
-        <a href="javascript:void(0)" onclick="loadReport(this, '/report/CustomerGrowth')" class="report-link block px-4 py-3 rounded-lg hover:bg-slate-800">
+        <a href="javascript:void(0)" onclick="loadReport(this, '/report/customergrowth')" class="report-link block px-4 py-3 rounded-lg hover:bg-slate-800 transition">
           客戶增長分析
         </a>
 
-        <!-- ADMIN -->
         <div id="admin-section" class="hidden">
           <p class="text-[10px] text-slate-500 uppercase font-bold px-3 mt-8 mb-2 tracking-widest">
             管理控制台
           </p>
 
-          <a href="javascript:void(0)" onclick="loadReport(this, '/admin/permissions')" class="report-link block px-4 py-3 rounded-lg hover:bg-slate-800">
-            權限控制
-          </a>
-          <a href="javascript:void(0)" onclick="loadReport(this, '/admin/audit-logs')" class="report-link block px-4 py-3 rounded-lg hover:bg-slate-800">
-            查詢紀錄
-          </a>
-          
+          <div class="mt-1">
+            <button @click="openGroups.includes('raw') ? openGroups = openGroups.filter(g => g !== 'raw') : openGroups.push('raw')" 
+              class="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+              <span class="text-sm font-bold">📥 原始資料下載/編輯</span>
+              <span class="text-[10px]" x-text="openGroups.includes('raw') ? '▲' : '▼'"></span>
+            </button>
+            <div x-show="openGroups.includes('raw')" x-cloak class="ml-6 mt-1 space-y-1 border-l border-slate-700 pl-2">
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/raw-station')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">Station 資料下載/篩選</a>
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/raw-bicycle')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">Bicycle 資料下載/篩選</a>
+            </div>
+          </div>
+
+          <div class="mt-1">
+            <button @click="openGroups.includes('basic') ? openGroups = openGroups.filter(g => g !== 'basic') : openGroups.push('basic')" 
+              class="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+              <span class="text-sm font-bold">⚙️ 基礎字典設定</span>
+              <span class="text-[10px]" x-text="openGroups.includes('basic') ? '▲' : '▼'"></span>
+            </button>
+            <div x-show="openGroups.includes('basic')" x-cloak class="ml-6 mt-1 space-y-1 border-l border-slate-700 pl-2">
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/category-items')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">項目編號/類別</a>
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/vehicle-types')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">車型與等級管理</a>
+            </div>
+          </div>
+
+          <div class="mt-1">
+            <button @click="openGroups.includes('score') ? openGroups = openGroups.filter(g => g !== 'score') : openGroups.push('score')" 
+              class="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+              <span class="text-sm font-bold">⚖️ 計分邏輯配置</span>
+              <span class="text-[10px]" x-text="openGroups.includes('score') ? '▲' : '▼'"></span>
+            </button>
+            <div x-show="openGroups.includes('score')" x-cloak class="ml-6 mt-1 space-y-1 border-l border-slate-700 pl-2">
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/score-logic')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">計分/配分方式</a>
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/deduction-rules')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">扣分值級距設定</a>
+            </div>
+          </div>
+
+          <div class="mt-1">
+            <button @click="openGroups.includes('kpi') ? openGroups = openGroups.filter(g => g !== 'kpi') : openGroups.push('kpi')" 
+              class="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+              <span class="text-sm font-bold">🚀 營運績效報表</span>
+              <span class="text-[10px]" x-text="openGroups.includes('kpi') ? '▲' : '▼'"></span>
+            </button>
+            <div x-show="openGroups.includes('kpi')" x-cloak class="ml-6 mt-1 space-y-1 border-l border-slate-700 pl-2">
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/availability-rate')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">可調率/妥善率</a>
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/maintenance-rate')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">維整率統計</a>
+            </div>
+          </div>
+
+          <div class="mt-1">
+            <button @click="openGroups.includes('report') ? openGroups = openGroups.filter(g => g !== 'report') : openGroups.push('report')" 
+              class="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+              <span class="text-sm font-bold">📊 綜合統計輸出</span>
+              <span class="text-[10px]" x-text="openGroups.includes('report') ? '▲' : '▼'"></span>
+            </button>
+            <div x-show="openGroups.includes('report')" x-cloak class="ml-6 mt-1 space-y-1 border-l border-slate-700 pl-2">
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/summary-monthly')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">總分表 (月/人)</a>
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/problem-stats')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">問題統計總表</a>
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/region-details')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">各區異常統計表</a>
+            </div>
+          </div>
+
+          <div class="pt-4 mt-4 border-t border-slate-800">
+            <a href="javascript:void(0)" onclick="loadReport(this, '/admin/permissions')" class="report-link block px-4 py-3 rounded-lg hover:bg-slate-800 transition text-orange-400 font-bold">
+              👤 權限控制
+            </a>
+            <a href="javascript:void(0)" onclick="loadReport(this, '/admin/audit-logs')" class="report-link block px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+              🔍 查詢紀錄
+            </a>
+          </div>
         </div>
       </nav>
+    
     </aside>
 
     <!-- Main -->
@@ -173,91 +227,7 @@
     </main>
   </div>
 
-  <script>
-  window.currentUser = null;
-
-  async function init() {
-    const nameElement = document.getElementById("user-display-name");
-    const roleElement = document.getElementById("user-role-badge");
-    const adminSection = document.getElementById("admin-section");
-
-    try {
-      // 呼叫 API 取得登入資訊
-      const res = await fetch("/api/me", { credentials: "include" });
-
-      if (res.ok) {
-        const data = await res.json();
-        window.currentUser = data.user;
-
-        // 1. 顯示姓名
-        nameElement.textContent = data.user?.cn || data.user?.username || "未知用戶";
-
-        // 2. 角色判定：將 role 轉為大寫再比較 (防止後端傳 admin 小寫)
-        const userRole = (data.user?.role || "VIEWER").toUpperCase();
-        roleElement.textContent = userRole;
-
-        // 3. 顯示管理選單
-        if (userRole === "ADMIN") {
-          console.log("偵測為管理員，移除 hidden 樣式");
-          // 確保移除 hidden 類別
-          adminSection.classList.remove("hidden");
-          // 雙重保險：如果 CSS 有其他覆蓋，直接強制顯示
-          adminSection.style.display = "block"; 
-        } else {
-          console.log("目前角色為:", userRole, "非 ADMIN");
-        }
-
-      } else {
-        // API 回傳非 200 (例如 session 過期)
-        window.location.href = "/";
-      }
-    } catch (e) {
-      console.error("初始化失敗:", e);
-      nameElement.textContent = "API 連線失敗";
-    }
-  }
-
-  /**
-   * 載入報表
-   */
-  function loadReport(target, url) {
-    const frame = document.getElementById("reportFrame");
-    const container = document.getElementById("reportContainer");
-    const placeholder = document.getElementById("resultPlaceholder");
-    const locationText = document.getElementById("current-location-text");
-    const allLinks = document.querySelectorAll('.report-link');
-
-    // 清除所有選單的選中樣式，並給當前選單加上亮色
-    allLinks.forEach(l => l.classList.remove('bg-orange-600', 'text-white'));
-    if (target && target.classList) {
-        target.classList.add('bg-orange-600', 'text-white');
-        locationText.textContent = target.innerText.trim();
-    }
-
-    container.classList.remove("hidden");
-    placeholder.classList.add("hidden");
-    frame.src = url;
-
-    // 自動關閉側邊欄 (Alpine.js 事件)
-    window.dispatchEvent(new CustomEvent('close-sidebar'));
-  }
-
-  async function logout() {
-    if (!confirm("確定要登出報表系統？")) return;
-
-    try {
-        await fetch("/api/logout", {
-          method: "POST",
-          credentials: "include",
-        });
-        location.href = "/";
-    } catch (e) {
-        alert("登出失敗");
-    }
-  }
-
-  window.onload = init;
-</script>
+  <script src="/services/search.js"></script>
 
 </body>
 </html>

@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { requireAdmin } from "../middleware/authMiddleware.js";
+import { requireAdmin } from "../middleware/authmiddleware.js";
 import {
   readMappings,
   saveMappings,
   readAuditLogs,
-} from "../services/configService.js";
+} from "../services/configservice.js";
 
 const router = Router();
 

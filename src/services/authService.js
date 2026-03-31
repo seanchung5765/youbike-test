@@ -1,5 +1,5 @@
-import { authenticateWithLdap } from "./ldapService.js";
-import { readMappings } from "./configService.js";
+import { authenticateWithLdap } from "./ldapservice.js";
+import { readMappings } from "./configservice.js";
 
 function resolveRole(memberOf, roleMappings) {
   let finalRole = "VIEWER";
