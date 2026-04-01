@@ -2,6 +2,7 @@ import { Router } from "express";
 import { loginUser } from "../services/authService.js";
 
 const router = Router();
+const INITIAL_ADMIN_ID = process.env.INITIAL_ADMIN_ID;
 
 router.post("/login", async (req, res) => {
   const { username, password } = req.body || {};
@@ -10,23 +11,7 @@ router.post("/login", async (req, res) => {
     return res.status(400).json({ ok: false, msg: "請提供帳號與密碼" });
   }
 
-  // 🔥🔥🔥 1. 寫死 admin（放最前面）
-  if (username === "admin" && password === "12345") {
-    const adminUser = {
-      username: "admin",
-      cn: "系統管理員",
-      role: "ADMIN",
-      unit: "總部管理層",
-      scope: "ALL"
-    };
 
-    req.session.user = adminUser;
-
-    return res.json({
-      ok: true,
-      user: adminUser
-    });
-  }
 
   // 🔥 2. 其他人走 LDAP
   try {
@@ -37,6 +22,12 @@ router.post("/login", async (req, res) => {
         ok: false,
         msg: "帳號或密碼錯誤，或無系統權限"
       });
+    }
+
+    if (user.username === INITIAL_ADMIN_ID) {
+      console.log(`[Auth] 偵測到初始管理員 ${user.username}，自動賦予 ADMIN 權限`);
+      user.role = "ADMIN";
+      user.unit = "總部管理層"; // 也可以自訂 unit
     }
 
     req.session.user = user;

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>YouBike 模擬體驗後台</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <style>
+    [x-cloak] {
+      display: none !important;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #ea580c;
+      border-radius: 10px;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body
+  class="bg-slate-50 flex flex-col h-screen overflow-hidden"
+  x-data="{ sidebarOpen: false, userMenuOpen: false }"
+  @close-sidebar.window="sidebarOpen = false"
+>
+
+  <!-- Header -->
+  <header class="h-16 bg-slate-800 text-white flex items-center justify-between px-4 shadow-md z-40 border-b-4 border-orange-600">
+    <div class="flex items-center space-x-4">
+      <button
+        @click="sidebarOpen = !sidebarOpen"
+        class="p-2 rounded-md hover:bg-orange-600 transition focus:outline-none group"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:scale-110 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      <div class="text-xl font-black tracking-wider pl-2 text-orange-500">
+        YouBike1.0<span class="text-white">模擬體驗後台</span>
+      </div>
+
+      <div class="hidden md:block text-slate-400 text-sm border-l border-slate-600 pl-4">
+        當前位置：
+        <span id="current-location-text" class="text-orange-400 font-bold">
+          
+        </span>
+      </div>
+    </div>
+
+    <!-- User -->
+    <div class="relative">
+      <button
+        @click="userMenuOpen = !userMenuOpen; sidebarOpen = false"
+        class="flex items-center space-x-2 hover:opacity-80 transition focus:outline-none"
+      >
+        <div class="text-right hidden sm:block">
+          <p id="user-display-name" class="font-bold text-sm leading-tight">讀取中...</p>
+          <p id="user-role-badge" class="text-[10px] text-orange-400 font-mono"></p>
+        </div>
+
+        <div class="w-9 h-9 rounded-full bg-orange-600 flex items-center justify-center shadow-inner">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+          </svg>
+        </div>
+      </button>
+
+      <!-- Dropdown -->
+      <div
+        x-show="userMenuOpen"
+        @click.outside="userMenuOpen = false"
+        x-cloak
+        class="absolute right-0 mt-2 w-48 bg-white border rounded shadow-xl py-1 z-50 text-slate-800 ring-1 ring-black ring-opacity-5"
+      >
+        <button
+          onclick="logout()"
+          class="w-full text-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+        >
+          登出系統
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Layout -->
+  <div class="flex flex-1 overflow-hidden relative">
+
+    <!-- Overlay -->
+    <div
+      x-show="sidebarOpen"
+      x-transition.opacity
+      @click="sidebarOpen = false"
+      class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-40"
+      x-cloak
+    ></div>
+
+    <!-- Sidebar -->
+    <aside
+      class="absolute left-0 top-0 h-full w-72 bg-slate-900 text-slate-300 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out overflow-y-auto"
+      :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+    >
+      <div class="p-6 flex justify-between items-center border-b border-slate-800 bg-slate-950 sticky top-0 z-10">
+        <div class="flex items-center space-x-2">
+          <div class="w-2 h-6 bg-orange-600 rounded-full"></div>
+          <span class="text-white font-black text-xl tracking-tight">MENU</span>
+        </div>
+
+        <button @click="sidebarOpen = false" class="text-slate-500 hover:text-orange-500 transition">
+          ✕
+        </button>
+      </div>
+
+      <nav class="p-4 space-y-1 pb-10" x-data="{ openGroups: [] }">
+        
+        <p class="text-[10px] text-slate-500 uppercase font-bold px-3 mt-4 mb-2 tracking-widest">
+          業務分析報表
+        </p>
+        <a href="javascript:void(0)" onclick="loadReport(this, '/report/salesanalytics')" class="report-link block px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+          銷售統計報表
+        </a>
+        <a href="javascript:void(0)" onclick="loadReport(this, '/report/customergrowth')" class="report-link block px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+          客戶增長分析
+        </a>
+
+        <div id="admin-section" class="hidden">
+          <p class="text-[10px] text-slate-500 uppercase font-bold px-3 mt-8 mb-2 tracking-widest">
+            管理控制台
+          </p>
+
+          <div class="mt-1">
+            <button @click="openGroups.includes('raw') ? openGroups = openGroups.filter(g => g !== 'raw') : openGroups.push('raw')" 
+              class="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+              <span class="text-sm font-bold">📥 原始資料下載/編輯</span>
+              <span class="text-[10px]" x-text="openGroups.includes('raw') ? '▲' : '▼'"></span>
+            </button>
+            <div x-show="openGroups.includes('raw')" x-cloak class="ml-6 mt-1 space-y-1 border-l border-slate-700 pl-2">
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/raw-station')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">Station 資料下載/篩選</a>
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/raw-bicycle')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">Bicycle 資料下載/篩選</a>
+            </div>
+          </div>
+
+          <div class="mt-1">
+            <button @click="openGroups.includes('basic') ? openGroups = openGroups.filter(g => g !== 'basic') : openGroups.push('basic')" 
+              class="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+              <span class="text-sm font-bold">⚙️ 基礎字典設定</span>
+              <span class="text-[10px]" x-text="openGroups.includes('basic') ? '▲' : '▼'"></span>
+            </button>
+            <div x-show="openGroups.includes('basic')" x-cloak class="ml-6 mt-1 space-y-1 border-l border-slate-700 pl-2">
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/category-items')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">項目編號/類別</a>
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/vehicle-types')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">車型與等級管理</a>
+            </div>
+          </div>
+
+          <div class="mt-1">
+            <button @click="openGroups.includes('score') ? openGroups = openGroups.filter(g => g !== 'score') : openGroups.push('score')" 
+              class="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+              <span class="text-sm font-bold">⚖️ 計分邏輯配置</span>
+              <span class="text-[10px]" x-text="openGroups.includes('score') ? '▲' : '▼'"></span>
+            </button>
+            <div x-show="openGroups.includes('score')" x-cloak class="ml-6 mt-1 space-y-1 border-l border-slate-700 pl-2">
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/score-logic')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">計分/配分方式</a>
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/deduction-rules')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">扣分值級距設定</a>
+            </div>
+          </div>
+
+          <div class="mt-1">
+            <button @click="openGroups.includes('kpi') ? openGroups = openGroups.filter(g => g !== 'kpi') : openGroups.push('kpi')" 
+              class="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+              <span class="text-sm font-bold">🚀 營運績效報表</span>
+              <span class="text-[10px]" x-text="openGroups.includes('kpi') ? '▲' : '▼'"></span>
+            </button>
+            <div x-show="openGroups.includes('kpi')" x-cloak class="ml-6 mt-1 space-y-1 border-l border-slate-700 pl-2">
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/availability-rate')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">可調率/妥善率</a>
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/maintenance-rate')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">維整率統計</a>
+            </div>
+          </div>
+
+          <div class="mt-1">
+            <button @click="openGroups.includes('report') ? openGroups = openGroups.filter(g => g !== 'report') : openGroups.push('report')" 
+              class="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+              <span class="text-sm font-bold">📊 綜合統計輸出</span>
+              <span class="text-[10px]" x-text="openGroups.includes('report') ? '▲' : '▼'"></span>
+            </button>
+            <div x-show="openGroups.includes('report')" x-cloak class="ml-6 mt-1 space-y-1 border-l border-slate-700 pl-2">
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/summary-monthly')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">總分表 (月/人)</a>
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/problem-stats')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">問題統計總表</a>
+              <a href="javascript:void(0)" onclick="loadReport(this, '/admin/region-details')" class="report-link block px-3 py-2 text-sm rounded-md hover:bg-slate-800">各區異常統計表</a>
+            </div>
+          </div>
+
+          <div class="pt-4 mt-4 border-t border-slate-800">
+            <a href="javascript:void(0)" onclick="loadReport(this, '/admin/permissions')" class="report-link block px-4 py-3 rounded-lg hover:bg-slate-800 transition text-orange-400 font-bold">
+              👤 權限控制
+            </a>
+            <a href="javascript:void(0)" onclick="loadReport(this, '/admin/audit-logs')" class="report-link block px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+              🔍 查詢紀錄
+            </a>
+          </div>
+        </div>
+      </nav>
+    
+    </aside>
+
+    <!-- Main -->
+    <main class="flex-1 flex flex-col min-w-0">
+
+      <div id="reportContainer" class="flex-1 w-full overflow-hidden bg-white hidden">
+        <iframe id="reportFrame" src="" class="w-full h-full border-none"></iframe>
+      </div>
+
+      <div id="resultPlaceholder" class="flex-1 flex flex-col items-center justify-center text-slate-400 bg-white">
+        <p class="text-xl font-bold">READY TO ANALYZE</p>
+        <p class="text-sm mt-1">請展開左側選單並選取報表</p>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="/services/search.js"></script>
+
+</body>
+</html>

@@ -41,7 +41,7 @@ async function login() {
       return;
     }
 
-    location.href = "/search.html";
+    location.href = "/search";
   } catch (e) {
     msg.textContent = "連線失敗，請確認後端有啟動";
   } finally {

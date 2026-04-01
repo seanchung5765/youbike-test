@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>成長趨勢報表</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 手機端微調：隱藏捲動條但保留功能 */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    
+    /* 確保表格在小螢幕不會斷行太嚴重 */
+    th, td { white-space: nowrap; }
+
+    /* 點擊回饋 */
+    .active-press:active { transform: scale(0.98); transition: 0.1s; }
+  </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen">
+
+  <div class="max-w-4xl mx-auto p-4 md:p-6">
+    
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-xl md:text-2xl font-black text-slate-800">📈 成長趨勢報表</h1>
+      <span class="text-[10px] bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-bold md:hidden">MOBILE VIEW</span>
+    </div>
+
+    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6">
+      <div class="flex flex-col sm:flex-row gap-3">
+        
+        <div class="relative flex-1">
+          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">營運地區</label>
+          <select id="regionFilter" class="w-full h-12 pl-3 pr-10 bg-slate-50 border border-slate-200 rounded-xl appearance-none focus:ring-2 focus:ring-orange-500 outline-none transition-all text-slate-700">
+            <option value="">全部地區</option>
+            <option value="台北">台北市</option>
+            <option value="桃園">桃園市</option>
+            <option value="新竹">新竹市</option>
+            <option value="苗栗">苗栗縣</option>
+            <option value="台中">台中市</option>
+            <option value="高雄">高雄市</option>
+          </select>
+          <div class="absolute right-3 top-9 pointer-events-none text-slate-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+
+        <div class="flex items-end">
+          <button onclick="loadData()"
+            class="w-full sm:w-auto h-12 bg-slate-900 hover:bg-orange-600 text-white font-bold px-8 rounded-xl transition-all active-press shadow-lg shadow-slate-200">
+            開始查詢
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="p-3 bg-slate-50 border-b border-slate-100 text-center md:hidden">
+        <p class="text-[10px] text-slate-400">💡 左右滑動查看完整報表</p>
+      </div>
+
+      <div class="overflow-x-auto no-scrollbar">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-50 text-slate-500 uppercase text-[11px] font-bold tracking-wider">
+              <th class="p-4 border-b">地區</th>
+              <th class="p-4 border-b">月份</th>
+              <th class="p-4 border-b text-right">用戶數</th>
+              <th class="p-4 border-b text-right">成長率</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="text-slate-700 divide-y divide-slate-100">
+            <tr>
+               <td colspan="4" class="p-10 text-center text-slate-400">資料讀取中...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="mt-4 text-center">
+      <p id="lastUpdate" class="text-[10px] text-slate-400"></p>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+
+    async function init() {
+      try {
+        const res = await fetch("/api/me", { credentials: "include" });
+        if (!res.ok) { window.parent.location.href = "/"; return; }
+
+        const data = await res.json();
+        currentUser = data.user;
+
+        applyScopeToDropdown();
+        loadData();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function applyScopeToDropdown() {
+      const select = document.getElementById("regionFilter");
+      if (!currentUser) return;
+
+      // 1. 取得權限範圍並標準化 (處理大小寫與型別)
+      const scope = currentUser.scope;
+      
+      // 2. 定義「管理員/全區」的通行條件
+      // 如果 scope 是字串 "ALL" (不分大小寫) 或其 role 本身就是 "ADMIN"
+      const isFullAccess = 
+        (typeof scope === 'string' && scope.toUpperCase() === 'ALL') || 
+        (currentUser.role && currentUser.role.toUpperCase() === 'ADMIN');
+
+      if (isFullAccess) {
+        console.log("✅ 檢測為全區權限，保留所有選單項目");
+        return; // 直接跳出，不刪除任何選項
+      }
+
+      // 3. 針對有限權限進行過濾
+      // 確保 allowed 是一個陣列
+      const allowed = Array.isArray(scope) ? scope : [];
+      
+      console.log("🔒 執行權限過濾，允許範圍：", allowed);
+
+      // 使用反向迴圈刪除 (從後往前刪)，避免索引位移導致漏掉選項
+      for (let i = select.options.length - 1; i >= 0; i--) {
+        const opt = select.options[i];
+        const val = opt.value;
+
+        // 如果選項有值(不是"全部地區")，且不在允許清單內，就移除
+        if (val !== "" && !allowed.includes(val)) {
+          opt.remove();
+        }
+      }
+
+      // 4. 自動選取剩餘的第一個有效地區 (如果只剩下一區)
+      if (select.options.length === 2 && select.options[1].value !== "") {
+        select.selectedIndex = 1;
+      }
+    }
+
+    async function loadData() {
+      const region = document.getElementById("regionFilter").value;
+      const tbody = document.getElementById("tableBody");
+      
+      // 手機版載入動畫感
+      tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center"><div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-orange-500 border-t-transparent"></div></td></tr>`;
+
+      try {
+        const res = await fetch(`/api/reports?region=${region}`, { credentials: "include" });
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert(data.msg || "查詢失敗");
+          return;
+        }
+
+        renderTable(data.data);
+        document.getElementById("lastUpdate").textContent = `最後更新時間：${new Date().toLocaleTimeString()}`;
+      } catch (err) {
+        alert("網路連線錯誤");
+      }
+    }
+
+    function renderTable(rows) {
+      const tbody = document.getElementById("tableBody");
+      tbody.innerHTML = "";
+
+      if (!rows || rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center p-12 text-slate-400 italic">查無對應資料</td></tr>`;
+        return;
+      }
+
+      rows.forEach(r => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50 transition-colors";
+
+        // 針對數值欄位，在手機端使用 text-right 並加上加粗效果
+        tr.innerHTML = `
+          <td class="p-4 font-bold text-slate-900">${r.region}</td>
+          <td class="p-4 text-slate-500">${r.month}</td>
+          <td class="p-4 text-right font-mono font-bold">${Number(r.users).toLocaleString()}</td>
+          <td class="p-4 text-right">
+            <span class="px-2 py-1 rounded-md ${r.growth >= 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'} font-bold">
+              ${r.growth > 0 ? '+' : ''}${r.growth}%
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    init();
+  </script>
+
+</body>
+</html>

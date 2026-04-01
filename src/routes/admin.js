@@ -1,13 +1,17 @@
 import { Router } from "express";
-import { requireAdmin } from "../middleware/requireAdmin.js";
-import { readMappings, saveMappings, readAuditLogs } from "../services/configService.js";
+import { requireAdmin } from "../middleware/authmiddleware.js";
+import {
+  readMappings,
+  saveMappings,
+  readAuditLogs,
+} from "../services/configservice.js";
 
 const router = Router();
 
 router.get("/config", requireAdmin, async (req, res) => {
   try {
     const data = await readMappings();
-    res.json(data);
+    res.json({ ok: true, data });
   } catch (err) {
     console.error("讀取設定失敗:", err);
     res.status(500).json({ ok: false, msg: "無法讀取映射設定檔" });
@@ -23,7 +27,14 @@ router.post("/config/role", requireAdmin, async (req, res) => {
     }
 
     const data = await readMappings();
-    const exists = data.roleMappings.find((m) => m.ldap_group_dn === ldap_group_dn);
+
+    if (!Array.isArray(data.roleMappings)) {
+      data.roleMappings = [];
+    }
+
+    const exists = data.roleMappings.find(
+      (m) => m.ldap_group_dn === ldap_group_dn
+    );
 
     if (exists) {
       exists.role_id = role_id;
@@ -32,6 +43,7 @@ router.post("/config/role", requireAdmin, async (req, res) => {
     }
 
     await saveMappings(data);
+
     res.json({ ok: true, msg: "權限映射已成功更新" });
   } catch (err) {
     console.error("儲存設定失敗:", err);
