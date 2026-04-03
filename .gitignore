@@ -1,0 +1,17 @@
+# 排除所有 node_modules
+node_modules/
+
+# 排除所有環境變數檔案 (包含 api 和 web 裡的)
+.env
+.env.*
+
+# 排除系統產生的雜物
+.DS_Store
+Thumbs.db
+
+# 排除編輯器設定
+.vscode/
+.idea/
+
+# 排除 npm 錯誤日誌
+npm-debug.log*
