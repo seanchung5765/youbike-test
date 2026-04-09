@@ -1,0 +1,28 @@
+# --- 系統與開發工具 ---
+node_modules/
+.vscode/
+.DS_Store
+dist/
+dist-ssr/
+*.log
+*.local
+
+# --- 重要：排除機密檔案 (涵蓋所有資料夾) ---
+.env
+*.json.key
+secrets.txt
+
+# --- 編輯器相關 ---
+.idea
+*.suo
+*.njsproj
+*.sln
+*.sw?
+
+# --- Vite / 測試相關 ---
+*.timestamp-*-*.mjs
+/cypress/videos/
+/cypress/screenshots/
+__screenshots__/
+.eslintcache
+*.tsbuildinfo
